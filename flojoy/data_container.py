@@ -5,6 +5,7 @@ from pandas import DataFrame as PandasDataFrame
 from box import Box, box_list
 import plotly.graph_objects as go  # type:ignore
 from typing import Union, Literal, get_args, Any, cast
+from mecademicpy.robot import Robot
 
 
 def find_closest_match(given_str: str, available_str: list[str]):
@@ -38,6 +39,7 @@ DCType = Literal[
     "ParametricScalar",
     "ParametricSurface",
     "ParametricVector",
+    "MecademicConnHandle",
 ]
 
 DCNpArrayType = np.ndarray[Union[int, float], np.dtype[Any]]
@@ -53,6 +55,7 @@ DCKwargsValue = Union[
     bytes,
     str,
     None,
+    Robot
 ]
 
 ExtraType = dict[str, Any] | None
@@ -94,6 +97,7 @@ class DataContainer(Box):
         "text_blob",
         "fig",
         "extra",
+        "robot",
     ]
     combinations = {
         "x": ["y", "t", "z", "extra"],
@@ -111,6 +115,7 @@ class DataContainer(Box):
         "text_blob": ["extra"],
         "extra": [*(k for k in allowed_keys if k not in ["extra"])],
         "fig": ["t", "extra"],
+        "robot": ["extra"]
     }
     type_keys_map: dict[DCType, list[str]] = {
         "DataFrame": ["m"],
@@ -125,6 +130,7 @@ class DataContainer(Box):
         "Plotly": ["fig"],
         "Bytes": ["b"],
         "TextBlob": ["text_blob"],
+        "MecademicConnHandle": ["robot"],
     }
 
     SKIP_ARRAYIEFY_TYPES = [
@@ -133,6 +139,7 @@ class DataContainer(Box):
         go.Figure,
         PandasDataFrame,
         np.ndarray,
+        Robot
     ]  # value types not to be arrayified
 
     type: DCType
@@ -514,3 +521,10 @@ class ParametricGrayscale(DataContainer):
         self, img: DCNpArrayType, t: DCNpArrayType, extra: ExtraType = None
     ):
         super().__init__(type="ParametricGrayscale", m=img, t=t, extra=extra)
+
+
+class MecademicConnHandle(DataContainer):
+    robot: Robot
+
+    def __init__(self, robot: Robot):  # type:ignore
+        super().__init__(type="MecademicConnHandle", robot=robot)
